@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Clock, Repeat } from 'lucide-react';
+import { Edit2, Trash2, Clock, Repeat, ArrowUp, ArrowDown } from 'lucide-react';
 import { Task } from '../types';
 import { cn } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
@@ -8,12 +8,23 @@ import { es } from 'date-fns/locale';
 interface TaskItemProps {
   key?: string;
   task: Task;
+  isFirst?: boolean;
+  isLast?: boolean;
   onToggle: (id: string, completed: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  onMove?: (id: string, direction: 'up' | 'down') => void;
 }
 
-export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
+export function TaskItem({ 
+  task, 
+  isFirst = false, 
+  isLast = false, 
+  onToggle, 
+  onEdit, 
+  onDelete, 
+  onMove 
+}: TaskItemProps) {
   let formattedDeadline: string | null = null;
   let isPastDeadline = false;
 
@@ -83,7 +94,39 @@ export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
+      <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
+        {onMove && (
+          <div className="flex items-center mr-1">
+            <button
+              onClick={() => onMove(task.id, 'up')}
+              disabled={isFirst}
+              className={cn(
+                "p-1.5 text-gray-400 rounded-md transition-colors",
+                isFirst 
+                  ? "opacity-30 cursor-not-allowed" 
+                  : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              )}
+              title={isFirst ? "En la posición superior" : "Mover arriba"}
+              aria-label="Mover arriba"
+            >
+              <ArrowUp size={15} />
+            </button>
+            <button
+              onClick={() => onMove(task.id, 'down')}
+              disabled={isLast}
+              className={cn(
+                "p-1.5 text-gray-400 rounded-md transition-colors",
+                isLast 
+                  ? "opacity-30 cursor-not-allowed" 
+                  : "hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              )}
+              title={isLast ? "En la posición inferior" : "Mover abajo"}
+              aria-label="Mover abajo"
+            >
+              <ArrowDown size={15} />
+            </button>
+          </div>
+        )}
         <button
           onClick={() => onEdit(task)}
           className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
