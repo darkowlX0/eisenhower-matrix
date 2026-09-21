@@ -11,6 +11,7 @@ interface TaskBoardProps {
   onAddTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
   onDeleteTask: (id: string) => void;
+  onMoveTask: (id: string, direction: 'up' | 'down', visibleTaskIds?: string[]) => void;
 }
 
 const QUADRANTS: { id: QuadrantId; title: string; subtitle: string; colorClass: string; darkColorClass: string }[] = [
@@ -20,7 +21,7 @@ const QUADRANTS: { id: QuadrantId; title: string; subtitle: string; colorClass: 
   { id: 'q4', title: 'Eliminar', subtitle: 'Ni Urgente ni Importante', colorClass: 'bg-gray-50/50 text-gray-900 border-gray-100', darkColorClass: 'dark:bg-gray-900/40 dark:text-gray-300 dark:border-gray-800' },
 ];
 
-export function TaskBoard({ tasks, showCompleted, onAddTask, onUpdateTask, onDeleteTask }: TaskBoardProps) {
+export function TaskBoard({ tasks, showCompleted, onAddTask, onUpdateTask, onDeleteTask, onMoveTask }: TaskBoardProps) {
   const [dragOverQuadrant, setDragOverQuadrant] = useState<QuadrantId | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -50,14 +51,7 @@ export function TaskBoard({ tasks, showCompleted, onAddTask, onUpdateTask, onDel
         {QUADRANTS.map(q => {
           const quadrantTasks = tasks
             .filter(t => t.quadrant === q.id)
-            .filter(t => showCompleted || !t.completed)
-            .sort((a, b) => {
-              if (a.completed !== b.completed) return a.completed ? 1 : -1;
-            if (a.deadline && b.deadline) return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-            if (a.deadline) return -1;
-            if (b.deadline) return 1;
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          });
+            .filter(t => showCompleted || !t.completed);
 
           return (
             <div 
@@ -104,13 +98,16 @@ export function TaskBoard({ tasks, showCompleted, onAddTask, onUpdateTask, onDel
                     Sin tareas
                   </div>
                 ) : (
-                  quadrantTasks.map(task => (
+                  quadrantTasks.map((task, index) => (
                     <TaskItem
                       key={task.id}
                       task={task}
+                      isFirst={index === 0}
+                      isLast={index === quadrantTasks.length - 1}
                       onToggle={(id, completed) => onUpdateTask(id, { completed })}
                       onEdit={handleOpenEdit}
                       onDelete={onDeleteTask}
+                      onMove={(id, direction) => onMoveTask(id, direction, quadrantTasks.map(t => t.id))}
                     />
                   ))
                 )}
