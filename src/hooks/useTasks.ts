@@ -242,6 +242,59 @@ export function useTasks() {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  return { tasks, addTask, updateTask, deleteTask };
+  const moveTask = (id: string, direction: 'up' | 'down', visibleTaskIds?: string[]) => {
+    setTasks(prev => {
+      const taskIndex = prev.findIndex(t => t.id === id);
+      if (taskIndex === -1) return prev;
+
+      let swapTargetId: string | undefined;
+
+      if (visibleTaskIds && visibleTaskIds.length > 0) {
+        const visiblePos = visibleTaskIds.indexOf(id);
+        if (visiblePos === -1) return prev;
+        const targetVisiblePos = direction === 'up' ? visiblePos - 1 : visiblePos + 1;
+        if (targetVisiblePos < 0 || targetVisiblePos >= visibleTaskIds.length) {
+          return prev;
+        }
+        swapTargetId = visibleTaskIds[targetVisiblePos];
+      } else {
+        const targetTask = prev[taskIndex];
+        const targetQuadrant = targetTask.quadrant;
+
+        // Encontrar todas las tareas del mismo cuadrante con sus índices originales en prev
+        const quadrantIndices: number[] = [];
+        prev.forEach((t, idx) => {
+          if (t.quadrant === targetQuadrant) {
+            quadrantIndices.push(idx);
+          }
+        });
+
+        const positionInQuadrant = quadrantIndices.indexOf(taskIndex);
+        if (positionInQuadrant === -1) return prev;
+
+        const swapPositionInQuadrant = direction === 'up' ? positionInQuadrant - 1 : positionInQuadrant + 1;
+        if (swapPositionInQuadrant < 0 || swapPositionInQuadrant >= quadrantIndices.length) {
+          return prev;
+        }
+
+        const swapOriginalIndex = quadrantIndices[swapPositionInQuadrant];
+        swapTargetId = prev[swapOriginalIndex]?.id;
+      }
+
+      if (!swapTargetId) return prev;
+
+      const swapOriginalIndex = prev.findIndex(t => t.id === swapTargetId);
+      if (swapOriginalIndex === -1) return prev;
+
+      const newTasks = [...prev];
+      const temp = newTasks[taskIndex];
+      newTasks[taskIndex] = newTasks[swapOriginalIndex];
+      newTasks[swapOriginalIndex] = temp;
+
+      return newTasks;
+    });
+  };
+
+  return { tasks, addTask, updateTask, deleteTask, moveTask };
 }
 
