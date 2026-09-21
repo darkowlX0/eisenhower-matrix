@@ -10,7 +10,7 @@ import { useTasks } from './hooks/useTasks';
 import { LayoutGrid, Eye, EyeOff } from 'lucide-react';
 
 export default function App() {
-  const { tasks, addTask, updateTask, deleteTask } = useTasks();
+  const { tasks, addTask, updateTask, deleteTask, moveTask } = useTasks();
   const [showCompleted, setShowCompleted] = useState(true);
 
   return (
@@ -56,6 +56,7 @@ export default function App() {
             onAddTask={addTask}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
+            onMoveTask={moveTask}
           />
         </div>
       </main>
